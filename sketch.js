@@ -1,195 +1,199 @@
+const Engine = Matter.Engine;
+const World= Matter.World;
+const Bodies = Matter.Bodies;
+const Constraint = Matter.Constraint;
+
+var engine, world;
+
+//game objects
+var box1,box2,box3,box4,box5; 
+var pig1,pig3;
+var log1,log3,log4,log5;
+var bird, slingshot,platform;
+
+//game sounds
+var birdSelectSound,birdFlySound,pigSnortSound;
+
+//background images
+var backgroundImg;
+var bg = "sprites/bg1.jpg";
 
 
-var bow , arrow,  background, redB, pinkB, greenB ,blueB ,arrowGroup;
-var bowImage, arrowImage, green_balloonImage, red_balloonImage, pink_balloonImage ,blue_balloonImage, backgroundImage;
-var burst;
-var gameOverImg, gameOver;
-var PLAY=1,END=0,gameState=1;
-var bg;
+//games state
+var gameState = "onSling";
 
-function preload(){
-  
-  backgroundImage = loadImage("https://img.freepik.com/free-vector/stock-market-economic-graph-with-diagrams-business-financial-concepts-reports-abstract-technology-communication-concept-background_29865-1321.jpg?size=626&ext=jpg");
-  
-  arrowImage = loadImage("https://www.freeiconspng.com/uploads/bullet-png-31.png");
-  
-  bowImage = loadImage("http://www.pngall.com/wp-content/uploads/5/Money-Heist-TV-Series-PNG-Download-Image.png");
-  
-  red_balloonImage = loadImage("https://www.buybitcoinworldwide.com/img/kb/crypto/crypto.png");
-  
-  green_balloonImage = loadImage("https://www.buybitcoinworldwide.com/img/kb/crypto/crypto.png");
-  
-  pink_balloonImage = loadImage("https://s3.amazonaws.com/gameartpartnersimagehost/wp-content/uploads/2016/11/GAP_feature2.png");
-  
-  blue_balloonImage = loadImage("https://s3.amazonaws.com/gameartpartnersimagehost/wp-content/uploads/edd/2016/03/Royalty-Free-Game-Art-Tiny-Army-Soldier-Featured2.png");
- 
-  burst=loadSound("https://static.wixstatic.com/mp3/bc193a_ac4e2b9865df4fa29d4af30179ff7569.mp3");
-  
-  gameOverImg=loadImage("http://img05.deviantart.net/fb16/i/2012/279/0/2/game_over_logo_by_mohanmadabd-d5gz4mj.png")
-  
- bg= loadSound("bg.wav");
+//score
+var score = 0;
+
+//birds
+var birds=[];
+
+function preload() {
+
+    getBackgroundImg();
+    bgImg=loadImage(bg);
+
+    birdFlySound=loadSound("sounds/bird_flying.mp3")
+    pigSnortSound=loadSound("sounds/pig_snort.mp3")
+    birdSelectSound=loadSound("sounds/bird_select.mp3")
+    
 }
 
+function setup(){
+    var canvas = createCanvas(1200,400);
+    canvas.position(15, 70);
+    engine = Engine.create();
+    world = engine.world;
 
+    ground = new Ground(600,height,1200,20);
+    platform = new Ground(150, 305, 300, 170);
 
-function setup() {
-  createCanvas(600, 600);
-  //creating background
-  background = createSprite(0,0,600,600);
-  background.addImage(backgroundImage);
-  background.scale = 3.5
-  
-  // creating bow to shoot arrow
-  bow = createSprite(480,220,20,50);
-  bow.addImage(bowImage); 
-  bow.scale = 0.1;
-  
- gameOver=createSprite(300,200,0,0);
-  gameOver.addImage("over",gameOverImg);
-  gameOver.visible=false;
-  
-   score = 0  
-  redB= new Group();
-  greenB= new Group();
-  blueB= new Group();
-  pinkB= new Group();
-  arrowGroup= new Group();
- 
-  bg.play();
-  
+    box1 = new Box(700,320,70,70);
+    box2 = new Box(920,320,70,70);
+    pig1 = new Pig(810, 350);
+    log1 = new Log(810,260,300, PI/2);
+
+    box3 = new Box(700,240,70,70);
+    box4 = new Box(920,240,70,70);
+    pig3 = new Pig(810, 220);
+
+    log3 =  new Log(810,180,300, PI/2);
+
+    box5 = new Box(810,160,70,70);
+    log4 = new Log(760,120,150, PI/7);
+    log5 = new Log(870,120,150, -PI/7);
+
+    bird = new Bird(200,50);    
+    bird2 = new Bird(150,170);   
+    bird3 = new Bird(100,170);     
+    bird4 = new Bird(50,170);    
+
+    birds.push(bird4)
+    birds.push(bird3)
+    birds.push(bird2)
+    birds.push(bird)
+
+    slingshot = new SlingShot(bird.body,{x:200, y:50});
 }
 
-function draw() {
-   
-if(gameState==PLAY)
-  {
-   
-  // moving ground
-    background.velocityX = -3 
-    if (background.x < 0){
-      background.x = background.width/2;
+function draw(){
+    
+    if(backgroundImg){
+        background(backgroundImg);
+        
+        noStroke();
+        textFont("Impact")
+        textSize(20)
+        fill("Red")
+        text("Score : " + score, width-300, 20); 
+        
+        if(birds.length>0){
+            text("Press Space Key for Next Bird", width/2-200, 25); 
+            text("Bird :  "+birds.length,width/2-100, 60)
+           
+        }
+        else{
+            text("Click on 'Reload Button' to reload the Game Level",width/2-200, 70)
+        }
+        
     }
-  
-  //moving bow
-  bow.y = World.mouseY
-  
-   // release arrow when space key is pressed
-  if (keyDown("space")) {
-    createArrow();
-    
-  }
-  
-  //creating continous enemies
-  var select_balloon = Math.round(random(1,4));
-  
-  if (World.frameCount % 100 == 0) {
-    if (select_balloon == 1) {
-      redBalloon();
-    } else if (select_balloon == 2) {
-      greenBalloon();
-    } else if (select_balloon == 3) {
-      blueBalloon();
-    } else {
-      pinkBalloon();
+    else{
+        //background("lightblue");
+        background(bgImg);
+        noStroke();
+        textFont("Impact")
+        textSize(20)
+        fill("Red")
+        text("Score : " + score, width-300, 20); 
+        
+        if(birds.length>0){
+            text("Press Space Key for Next Bird", width/2-200, 25); 
+            text("Bird :  "+birds.length,width/2-100, 60)
+            
+        }
+        else{
+            text("Click on 'Reload Button' to reload the Game Level",width/2-200, 70)
+        }
+         
     }
-  }
-  
-  if (arrowGroup.isTouching(redB)) {
-    burst.play()
-  redB.destroyEach();
-  arrowGroup.destroyEach();
-    score=score+1;
-}
-
-
-
-
- if (arrowGroup.isTouching(greenB)) {
-   burst.play();
-  greenB.destroyEach();
-  arrowGroup.destroyEach();
-  score=score+3;
-}
+    Engine.update(engine);
     
-    if (arrowGroup.isTouching(blueB)) {
-   burst.play();
-  gameState=END;
-}
-    
-    if (arrowGroup.isTouching(pinkB)) {
-   burst.play();
-   gameState=END;
-}
+    box1.display();
+    box2.display();
+    ground.display();
+    pig1.display();
+    pig1.score();
+    log1.display();
 
-  }
-else if(gameState==END)
-  {
-  
- if (arrowGroup.isTouching(blueB)||arrowGroup.isTouching(pinkB) ) {
-   burst.play();
-   gameState=0;
-   gameOver.visible=true;
-   gameOver.scale=0.5;
-  blueB.destroyEach ();
-    pinkB.destroyEach();
-   greenB.destroyEach();
-   redB.destroyEach();
-  arrowGroup.destroyEach();
-}
+    box3.display();
+    box4.display();
+    pig3.display();
+    pig3.score();
+    log3.display();
 
-  }
-  
-  drawSprites();
-    text("Score: "+ score, 500,50);
-}
+    box5.display();
+    log4.display();
+    log5.display();
 
+    bird.display();
+    bird2.display();
+    bird3.display();
+    bird4.display();
 
-function redBalloon() {
-  var red = createSprite(0,Math.round(random(20, 370)), 10, 10);
-  red.addImage(red_balloonImage);
-  red.velocityX = 3;
-  red.lifetime = 150;
-  red.scale = 0.1;
-  redB.add(red);
-}
-
-function blueBalloon() {
-  var blue = createSprite(0,Math.round(random(20, 370)), 10, 10);
-  blue.addImage(blue_balloonImage);
-  blue.velocityX = 3;
-  blue.lifetime = 150;
-  blue.scale = 0.2;
-  blueB.add(blue);
-}
-
-function greenBalloon() {
-  var green = createSprite(0,Math.round(random(20, 370)), 10, 10);
-  green.addImage(green_balloonImage);
-  green.velocityX = 3;
-  green.lifetime = 150;
-  green.scale = 0.1;
-  greenB.add(green);
-}
-
-function pinkBalloon() {
-  var pink = createSprite(0,Math.round(random(20, 370)), 10, 10);
-  pink.addImage(pink_balloonImage);
-  pink.velocityX = 3;
-  pink.lifetime = 150;
-   pink.scale = 0.2 ;  
-  pinkB.add(pink);
-}
-
-
-// Creating  arrows for bow
- function createArrow() {
-  var arrow= createSprite(5, 5, 20, 10);
-  arrow.addImage(arrowImage);
-  arrow.x = 360;
-  arrow.y=bow.y;
-  arrow.velocityX = -4;
-  arrow.lifetime = 100;
-  arrow.scale = 0.2;
-  arrowGroup.add(arrow);
+    platform.display();
    
+    slingshot.display(); 
+    
+}
+
+//pull the bird with the rubber band when mouse is dragged
+function mouseDragged(){
+    if (gameState!=="launched"){
+        Matter.Body.setPosition(birds[birds.length-1].body, {x: mouseX , y: mouseY});
+        Matter.Body.applyForce(birds[birds.length-1].body, birds[birds.length-1].body.position, {x:5,y:-5})
+        birdSelectSound.play()
+        return false;
+    }
+}
+//fly the bird when mouse is released
+function mouseReleased(){
+    slingshot.fly();
+    birdFlySound.play()
+    birds.pop();
+    gameState = "launched";
+    return false;
+}
+
+//set next bird when space key is pressed
+function keyPressed(){
+    if((keyCode === 32) && gameState ==="launched"){
+        if(birds.length>=0 ){   
+            Matter.Body.setPosition(birds[birds.length-1].body, {x: 200 , y: 50});         
+            slingshot.attach(birds[birds.length-1].body);
+            
+            gameState = "onSling";
+            birdSelectSound.play()
+        }
+        
+    }
+    
+}
+
+
+async function getBackgroundImg(){
+    var response = await fetch("http://worldtimeapi.org/api/timezone/Asia/Kolkata");
+    var responseJSON = await response.json();
+
+    var datetime = responseJSON.datetime;
+    var hour = datetime.slice(11,13);
+    
+    if(hour>=06 && hour<=19){
+        bg = "sprites/bg1.png";
+    }
+    else{
+        bg = "sprites/bg2.jpg";
+    }
+
+    backgroundImg = loadImage(bg);
+    
 }
